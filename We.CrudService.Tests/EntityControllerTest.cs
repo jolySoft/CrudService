@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Operations;
 using Microsoft.AspNetCore.Mvc;
 using Mongo2Go;
 using MongoDB.Driver;
+using Newtonsoft.Json.Serialization;
 using We.CrudService.Api.Repository;
 using We.CrudService.Tests.TestControllers;
 using We.CrudService.Tests.TestEntities;
@@ -70,7 +73,6 @@ namespace We.CrudService.Tests
             _collection.Find(x => true).First().Should().BeEquivalentTo(entity);
         }
 
-
         [Fact]
         public async Task CanPutAnEntity()
         {
@@ -79,7 +81,36 @@ namespace We.CrudService.Tests
             entity.Name = "Brian Blessed";
             entity.Age = 21;
 
+            await _controller.Put(entity.Id, entity);
 
+            _collection.Find(e => e.Id == entity.Id).First().Should().BeEquivalentTo(entity);
+        }
+
+        [Fact]
+        public async Task CanPatchAnEntity()
+        {
+            BuildCollection();
+            var operations = new List<Operation<TestEntity>>
+            {
+                new Operation<TestEntity>("replace", "/Age", null, 999)
+            };
+            var patch = new JsonPatchDocument<TestEntity>(operations, new DefaultContractResolver());
+            var id = _entities[2].Id;
+
+            await _controller.Patch(id, patch);
+
+            _collection.Find(e => e.Id == id).First().Age.Should().Be(999);
+        }
+
+        [Fact]
+        public async Task CanDeleteAnEntity()
+        {
+            BuildCollection();
+            var id = _entities[0].Id;
+
+            await _controller.Delete(id);
+
+            _collection.CountDocuments(FilterDefinition<TestEntity>.Empty).Should().Be(2);
         }
 
         private void BuildCollection()
