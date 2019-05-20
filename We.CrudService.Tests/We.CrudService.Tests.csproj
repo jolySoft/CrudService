@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\We.CrudService.Api\We.CrudService.Api.csproj" />
+    <ProjectReference Include="..\We.CrudService.Api\We.CrudService.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
